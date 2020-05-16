@@ -22,7 +22,6 @@ after_sucess:
     - docker push estevaodr/multi-server
     - docker push estevaodr/multi-worker
 
-    ## Deploy elastic Beanstalk
 deploy:
   edge: true
   provider: elasticbeanstalk
