@@ -1,0 +1,37 @@
+    sudo: required
+language: generic
+services:
+    - docker
+
+before_install:
+    - docker build -t estevaodr/react-test -f ./client/Dockerfile.dev ./client 
+
+script:
+    - docker run -e CI estevaodr/react-test npm test
+
+after_sucess:
+    - docker build -t estevaodr/multi-client ./client
+    - docker build -t estevaodr/multi-nginx ./nginx
+    - docker build -t estevaodr/multi-server ./server
+    - docker build -t estevaodr/multi-worker ./worker
+    # Log in to the docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # Take those images and push them to docker hub
+    - docker push estevaodr/multi-client
+    - docker push estevaodr/multi-nginx
+    - docker push estevaodr/multi-server
+    - docker push estevaodr/multi-worker
+
+    ## Deploy elastic Beanstalk
+deploy:
+  edge: true
+  provider: elasticbeanstalk
+  region: us-east-1
+  app: multi-docker
+  env: MultiDocker-env-1
+  bucket_name: elasticbeanstalk-us-east-1-206831939028
+  bucket_path: docker-multi
+  on:
+    branch: master
+  access_key_id: $AWS_ACCESS_KEY
+  secret_access_key: $AWS_SECRET_KEY
